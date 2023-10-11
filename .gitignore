@@ -15,3 +15,8 @@
 ### Serverless ###
 # Ignore build directory
 .serverless
+
+node_modules
+
+## VSCode
+.vscode

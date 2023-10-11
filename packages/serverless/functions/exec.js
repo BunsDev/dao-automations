@@ -15,7 +15,7 @@ exports.handler = async function() {
     new ethers.providers.JsonRpcProvider('https://rpc.ftm.tools', parseInt(chainId))
   let wallet = ethers.Wallet.fromMnemonic(process.env.MNEMONIC)
   wallet = wallet.connect(provider)
-  console.log('Wallet Connected');
+  console.log('Wallet connected');
 
   // Loads: Contract
   const Rewarder = new ethers.Contract(
@@ -23,9 +23,9 @@ exports.handler = async function() {
     RewarderABI,
     wallet,
   )
-  console.log('Contract Loaded');
+  console.log('Contract loaded');
 
-  console.log('Sending Transaction...');
+  console.log('Sending transaction...');
   try {
     // Specify custom tx overrides, such as gas price https://docs.ethers.io/ethers.js/v5-beta/api-contract.html#overrides
     // const overrides = { gasPrice: process.env.DEFAULT_GAS_PRICE };
@@ -33,7 +33,7 @@ exports.handler = async function() {
 
     // Sends: Transaction (if pending)
     const getPending = await Rewarder.available()
-    console.log('pending amount', Number(getPending))
+    console.log('Pending amount', Number(getPending))
     const tx = await Rewarder.allocate(overrides)
     const explorer = 'https://ftmscan.com'
     const successMessage = `:white_check_mark: Transaction sent ${explorer}/tx/${tx.hash}`;
