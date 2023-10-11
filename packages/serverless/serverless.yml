@@ -1,0 +1,30 @@
+org: unico
+app: dao-automations
+service: serverless
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ap-southeast-1
+  timeout: 30
+  environment:
+    CHAIN_ID: 250
+    DEFAULT_GAS_PRICE: 100000000000
+    MNEMONIC: process.env.MNEMONIC,
+    FROM_ADDRESS: process.env.FROM_ADDRESS,
+    SLACK_HOOK_URL: process.env.SLACK_HOOK_URL
+
+functions:
+  exec:
+    handler: functions/exec.handler    
+    events:
+      - schedule: rate(8 hours)
+
+plugins:
+  - serverless-offline
+  - serverless-offline-scheduler
+  - serverless-dotenv-plugin
+
+custom:
+  dotenv:
+    required:
+      file: true
