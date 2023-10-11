@@ -13,8 +13,9 @@
 .DS_Store
 
 ### Serverless ###
-# Ignore build directory
+## WARNING: DO NOT DELETE ##
 .serverless
+## WARNING: DO NOT DELETE ##
 
 node_modules
 
