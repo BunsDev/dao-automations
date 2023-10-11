@@ -12,6 +12,7 @@
     "invoke:local": "serverless invoke local --function exec"
   },
   "dependencies": {
+    "@types/node": "^20.8.4",
     "axios": "^1.4.0",
     "dotenv": "^16.3.1",
     "ethers": "^5.0.5",
