@@ -1,9 +1,9 @@
-const CommunityRewarder = require("./abis/CommunityRewarder.json");
+const Rewarder = require("./abis/Rewarder.json");
 const RewardToken = require("./abis/RewardToken.json");
 
 const abis = {
   RewardToken,
-  CommunityRewarder,
+  Rewarder,
 };
 
 module.exports = abis;

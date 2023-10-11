@@ -5,8 +5,8 @@ const { abis, addresses } = require('../constants')
 exports.handler = async function() {
   console.log('Starting...');
   // Loads: ABIs
-  const CommunityRewarderABI = abis.CommunityRewarder;
-  const CommunityRewarderAddress = addresses.CommunityRewarder;
+  const RewarderABI = abis.Rewarder;
+  const RewarderAddress = addresses.Rewarder;
   console.log('Contract ABIs loaded');
 
   // Initializes: Wallet
@@ -18,9 +18,9 @@ exports.handler = async function() {
   console.log('Wallet Connected');
 
   // Loads: Contract
-  const CommunityRewarder = new ethers.Contract(
-    CommunityRewarderAddress,
-    CommunityRewarderABI,
+  const Rewarder = new ethers.Contract(
+    RewarderAddress,
+    RewarderABI,
     wallet,
   )
   console.log('Contract Loaded');
@@ -32,9 +32,9 @@ exports.handler = async function() {
     const overrides = { gasPrice: 100_000_000_000 }; // 100 Gwei
 
     // Sends: Transaction (if pending)
-    const getPending = await CommunityRewarder.available()
+    const getPending = await Rewarder.available()
     console.log('pending amount', Number(getPending))
-    const tx = await CommunityRewarder.allocate(overrides)
+    const tx = await Rewarder.allocate(overrides)
     const explorer = 'https://ftmscan.com'
     const successMessage = `:white_check_mark: Transaction sent ${explorer}/tx/${tx.hash}`;
     console.log(successMessage)

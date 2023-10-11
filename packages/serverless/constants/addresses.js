@@ -1,5 +1,5 @@
 const addresses = { 
-  CommunityRewarder: "", // TODO
+  Rewarder: "", // TODO
   RewardToken: "", // TODO
 };
 
