@@ -1,0 +1,8 @@
+{
+  "name": "dao-automations",
+  "version": "1.0.0",
+  "description": "Modular set of automations designed for DAO integration.",
+  "repository": "https://github.com/BunsDev/dao-automations.git",
+  "author": "Buns Enchantress <bunsthedev@gmail.com>",
+  "license": "MIT"
+}
