@@ -1,0 +1,26 @@
+{
+  "name": "dao-serverless",
+  "version": "1.0.0",
+  "description": "Smart contract automation service built with the Serverless framework.",
+  "author": "Buns <bunsthedev@gmail.com>",
+  "license": "MIT",
+  "private": "true",
+  "scripts": {
+    "server:login": "serverless login",
+    "deploy": "serverless deploy",
+    "invoke": "serverless invoke",
+    "invoke:local": "serverless invoke local --function exec"
+  },
+  "dependencies": {
+    "axios": "^1.4.0",
+    "dotenv": "^16.3.1",
+    "ethers": "^5.0.5",
+    "inngest": "^2.4.0",
+    "serverless": "^3.33.0"
+  },
+  "devDependencies": {
+    "serverless-dotenv-plugin": "^6.0.0",
+    "serverless-offline": "^12.0.4",
+    "serverless-offline-scheduler": "^0.5.0"
+  }
+}
