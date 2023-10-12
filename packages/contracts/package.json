@@ -7,8 +7,11 @@
   "private": true,
   "scripts": {
     "build": "forge build",
+    "deploy:token": "forge script script/RewardToken.s.sol:TokenScript --rpc-url https://rpc.ankr.com/fantom --broadcast --verify",
+    "deploy:rewarder": "forge script script/Rewarder.s.sol:RewarderScript --rpc-url https://rpc.ankr.com/fantom --broadcast --verify",
     "test": "forge test -vv",
-    "flatten": "forge flatten"
+    "flat:token": "forge flatten --contracts src/RewardToken.sol --output src/flats/RewardToken_Flat.sol src/RewardToken.sol",
+    "flat:rewarder": "forge flatten --contracts src/Rewarder.sol --output src/flats/Rewarder_Flat.sol src/Rewarder.sol"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.0",
