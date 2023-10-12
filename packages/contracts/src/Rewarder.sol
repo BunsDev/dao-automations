@@ -186,17 +186,4 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
         emit Registered(account, email, block.timestamp);
     }
 
-    function allocateRewards() external onlyOwner {
-        uint rewardBalance = RewardToken.balanceOf(address(this));
-
-        // checks: there is a need for allocation
-        require(totalUnclaimed <= rewardBalance, 'no allocation needed');
-
-        // gets: amount toAllocate
-        uint toAllocate = totalUnclaimed - rewardBalance;
-
-        // transfers: rewards to contract.
-        RewardToken.safeTransferFrom(msg.sender, address(this), toAllocate);
-    }
-
 }
