@@ -84,8 +84,17 @@ contract RewarderTest is Test, Setup {
         require(verifyEmail(), 'failed to verify email');
         assertTrue(RewarderContract.isVerified(EMAIL_ADDRESS_ONE));
         console.log("[success]: email verified");
-
-
     }
     
+    function test_totalEmails() public {
+        // triggers: email registration
+        require(registerEmail(), 'failed to register email');
+
+        // checks: total emails.
+        assertTrue(RewarderContract.totalEmails() == 1);
+        console.log("[success]: totalEmails");
+        
+        assertTrue(RewarderContract.totalVerified() == 0);
+        console.log("[success]: totalVerified");
+    }
 }

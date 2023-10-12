@@ -3,7 +3,7 @@ This directory will house the smart contracts associated with DAO automations.
 
 ## Addresses
 - [RewardToken](https://ftmscan.com/address/0xeae3401374587be9A07FFB23EA3C2Bc5593B872A#code)
-- [Rewarder](https://ftmscan.com/address/0x49F9B065267dDF6815F73bd1Ed597f34FFb9a929#code)
+- [Rewarder](https://ftmscan.com/address/0xa03Aa9B7fac2ef7d4f7811EfEE328037E57f72d9#code)
 
 
 ---

@@ -27,6 +27,10 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
     mapping(address => UserInfo) public userInfo;
     // maps: email to an address.
     mapping (string => address) public userAddress;
+    
+    // counters
+    uint public totalEmails;
+    uint public totalVerified;
 
     // lists: emails
     string[] public emails;
@@ -136,6 +140,9 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
         // updates: emails list.
         emails.push(_email);
 
+        // increments: total number of emails.
+        totalEmails++;
+
         // updates: pending (unverifiedEmails) emails list.
         require(updatePending(), 'unable to update pending');
 
@@ -144,12 +151,11 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
 
     // sets: unverifiedEmails
     function updatePending() internal returns (bool) {
-        uint length = emails.length;
         // resets: unverifiedEmails.
         unverifiedEmails = new string[](0);
-        
+
         // iterates: emails and checks for unverifiedEmails addresses.
-        for (uint i = 0; i < length; ++i) {
+        for (uint i = 0; i < totalEmails; ++i) {
            if (!isVerified[emails[i]]) {
                unverifiedEmails.push(emails[i]);
            }
@@ -186,6 +192,7 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
  
         // verifies: email.
         isVerified[email] = true;
+        verifiedEmails.push(email);
 
         // gets: account associated with email.
         address account = userAddress[email];
@@ -217,12 +224,11 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
 
         // gets: list of unverified emails.
     function updateUnverified() external onlyOwner returns (string[] memory _unverifiedEmails) {
-        uint length = emails.length;
         // resets: unverifiedEmails.
         unverifiedEmails = new string[](0);
         
         // iterates: emails and checks for unverifiedEmails addresses.
-        for (uint i = 0; i < length; ++i) {
+        for (uint i = 0; i < totalEmails; ++i) {
            if (!isVerified[emails[i]]) {
                unverifiedEmails.push(emails[i]);
            }
