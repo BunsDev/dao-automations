@@ -233,7 +233,7 @@
                 "type": "string"
             }
         ],
-        "name": "registeredEmails",
+        "name": "isRegistered",
         "outputs": [
             {
                 "internalType": "bool",

@@ -16,7 +16,7 @@ contract RewarderTest is Test, Setup {
         // registers: email
         RewarderContract.register(EMAIL_ADDRESS_ONE);
 
-        return RewarderContract.registeredEmails(EMAIL_ADDRESS_ONE);
+        return RewarderContract.isRegistered(EMAIL_ADDRESS_ONE);
     }
 
     function verifyEmail() public returns (bool) {
@@ -26,28 +26,25 @@ contract RewarderTest is Test, Setup {
         // verifies: email
         RewarderContract.verifyEmail(EMAIL_ADDRESS_ONE);
 
-        return RewarderContract.registeredEmails(EMAIL_ADDRESS_ONE);
+        return RewarderContract.isRegistered(EMAIL_ADDRESS_ONE);
     }
 
     // tests: email registration.
-    function test_registerEmail() public {
+    function test_register() public {
         // triggers: email registration
         require(registerEmail(), 'failed to register email');
     
         // checks: registered and unverified.
-        assertTrue(RewarderContract.registeredEmails(EMAIL_ADDRESS_ONE));
+        assertTrue(RewarderContract.isRegistered(EMAIL_ADDRESS_ONE));
         console.log("[success]: email registered");
 
-        assertTrue(RewarderContract.unverifiedEmails(EMAIL_ADDRESS_ONE));
-        console.log("[success]: email unverified");
-
-        assertTrue(RewarderContract.verifiedEmails(EMAIL_ADDRESS_ONE) == false);
+        assertTrue(RewarderContract.isVerified(EMAIL_ADDRESS_ONE) == false);
         console.log("[success]: email NOT verified");
 
     }
 
     // tests: email verification.
-    function test_verifyEmail() public {
+    function test_verify() public {
         // triggers: email registration
         require(registerEmail(), 'failed to register email');
 
@@ -55,29 +52,40 @@ contract RewarderTest is Test, Setup {
         require(verifyEmail(), 'failed to verify email');
 
         // checks: registered and verified.
-        assertTrue(RewarderContract.registeredEmails(EMAIL_ADDRESS_ONE));
+        assertTrue(RewarderContract.isRegistered(EMAIL_ADDRESS_ONE));
         console.log("[success]: email registered");
 
-        assertTrue(RewarderContract.unverifiedEmails(EMAIL_ADDRESS_ONE) == false);
-        console.log("[success]: email NOT unverified");
-
-        assertTrue(RewarderContract.verifiedEmails(EMAIL_ADDRESS_ONE));
+        assertTrue(RewarderContract.isVerified(EMAIL_ADDRESS_ONE));
         console.log("[success]: email verified");
     }
 
     // tests: unverified emails.
-    function test_unverifiedEmails() public {
+    function test_unverified() public {
         // verify: unverified //
         // triggers: email registration
         require(registerEmail(), 'failed to register email');
-        assertTrue(RewarderContract.unverifiedEmails(EMAIL_ADDRESS_ONE));
-        console.log("[success]: email unverified");
+        assertTrue(RewarderContract.isVerified(EMAIL_ADDRESS_ONE) == false);
+        console.log("[success]: email NOT verified");
 
-        // falsify: unverified //
-        // triggers: email registration
+        // imitates: owner
+        vm.prank(address(0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496));
+
+        // triggers: update unverified
+        string[] memory uncheckedEmails = RewarderContract.updateUnverified();
+
+        // logs: all unchecked emails.
+        uint length = uncheckedEmails.length;
+        for (uint i = 0; i < length; ++i) {
+            console.log('%s: %s', i, uncheckedEmails[i]);
+        }
+
+        // verify: verified //
+        // triggers: email verification
         require(verifyEmail(), 'failed to verify email');
-        assertTrue(RewarderContract.unverifiedEmails(EMAIL_ADDRESS_ONE) == false);
-        console.log("[success]: email NOT unverified");
+        assertTrue(RewarderContract.isVerified(EMAIL_ADDRESS_ONE));
+        console.log("[success]: email verified");
+
 
     }
+    
 }
