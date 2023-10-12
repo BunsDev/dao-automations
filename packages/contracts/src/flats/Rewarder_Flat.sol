@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
 
+// OpenZeppelin Contracts (last updated v5.0.0) (access/Ownable.sol)
+
 // OpenZeppelin Contracts (last updated v5.0.0) (utils/Context.sol)
 
 /**
@@ -22,15 +24,13 @@ abstract contract Context {
     }
 }
 
-// OpenZeppelin Contracts (last updated v5.0.0) (access/Ownable2Step.sol)
-
 /**
  * @dev Contract module which provides a basic access control mechanism, where
  * there is an account (an owner) that can be granted exclusive access to
  * specific functions.
  *
- * By default, the owner account will be the one that deploys the contract. This
- * can later be changed with {transferOwnership}.
+ * The initial owner is set to the address provided by the deployer. This can
+ * later be changed with {transferOwnership}.
  *
  * This module is used through inheritance. It will make available the modifier
  * `onlyOwner`, which can be applied to your functions to restrict their use to
@@ -39,13 +39,34 @@ abstract contract Context {
 abstract contract Ownable is Context {
     address private _owner;
 
+    /**
+     * @dev The caller account is not authorized to perform an operation.
+     */
+    error OwnableUnauthorizedAccount(address account);
+
+    /**
+     * @dev The owner is not a valid owner account. (eg. `address(0)`)
+     */
+    error OwnableInvalidOwner(address owner);
+
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     /**
-     * @dev Initializes the contract setting the deployer as the initial owner.
+     * @dev Initializes the contract setting the address provided by the deployer as the initial owner.
      */
-    constructor() {
-        _setOwner(_msgSender());
+    constructor(address initialOwner) {
+        if (initialOwner == address(0)) {
+            revert OwnableInvalidOwner(address(0));
+        }
+        _transferOwnership(initialOwner);
+    }
+
+    /**
+     * @dev Throws if called by any account other than the owner.
+     */
+    modifier onlyOwner() {
+        _checkOwner();
+        _;
     }
 
     /**
@@ -56,22 +77,23 @@ abstract contract Ownable is Context {
     }
 
     /**
-     * @dev Throws if called by any account other than the owner.
+     * @dev Throws if the sender is not the owner.
      */
-    modifier onlyOwner() {
-        require(owner() == _msgSender(), "Ownable: caller is not the owner");
-        _;
+    function _checkOwner() internal view virtual {
+        if (owner() != _msgSender()) {
+            revert OwnableUnauthorizedAccount(_msgSender());
+        }
     }
 
     /**
      * @dev Leaves the contract without owner. It will not be possible to call
-     * `onlyOwner` functions anymore. Can only be called by the current owner.
+     * `onlyOwner` functions. Can only be called by the current owner.
      *
      * NOTE: Renouncing ownership will leave the contract without an owner,
-     * thereby removing any functionality that is only available to the owner.
+     * thereby disabling any functionality that is only available to the owner.
      */
     function renounceOwnership() public virtual onlyOwner {
-        _setOwner(address(0));
+        _transferOwnership(address(0));
     }
 
     /**
@@ -79,96 +101,20 @@ abstract contract Ownable is Context {
      * Can only be called by the current owner.
      */
     function transferOwnership(address newOwner) public virtual onlyOwner {
-        require(newOwner != address(0), "Ownable: new owner is the zero address");
-        _setOwner(newOwner);
+        if (newOwner == address(0)) {
+            revert OwnableInvalidOwner(address(0));
+        }
+        _transferOwnership(newOwner);
     }
 
-    function _setOwner(address newOwner) private {
+    /**
+     * @dev Transfers ownership of the contract to a new account (`newOwner`).
+     * Internal function without access restriction.
+     */
+    function _transferOwnership(address newOwner) internal virtual {
         address oldOwner = _owner;
         _owner = newOwner;
         emit OwnershipTransferred(oldOwner, newOwner);
-    }
-}
-
-// OpenZeppelin Contracts (last updated v5.0.0) (utils/ReentrancyGuard.sol)
-
-/**
- * @dev Contract module that helps prevent reentrant calls to a function.
- *
- * Inheriting from `ReentrancyGuard` will make the {nonReentrant} modifier
- * available, which can be applied to functions to make sure there are no nested
- * (reentrant) calls to them.
- *
- * Note that because there is a single `nonReentrant` guard, functions marked as
- * `nonReentrant` may not call one another. This can be worked around by making
- * those functions `private`, and then adding `external` `nonReentrant` entry
- * points to them.
- *
- * TIP: If you would like to learn more about reentrancy and alternative ways
- * to protect against it, check out our blog post
- * https://blog.openzeppelin.com/reentrancy-after-istanbul/[Reentrancy After Istanbul].
- */
-abstract contract ReentrancyGuard {
-    // Booleans are more expensive than uint256 or any type that takes up a full
-    // word because each write operation emits an extra SLOAD to first read the
-    // slot's contents, replace the bits taken up by the boolean, and then write
-    // back. This is the compiler's defense against contract upgrades and
-    // pointer aliasing, and it cannot be disabled.
-
-    // The values being non-zero value makes deployment a bit more expensive,
-    // but in exchange the refund on every call to nonReentrant will be lower in
-    // amount. Since refunds are capped to a percentage of the total
-    // transaction's gas, it is best to keep them low in cases like this one, to
-    // increase the likelihood of the full refund coming into effect.
-    uint256 private constant NOT_ENTERED = 1;
-    uint256 private constant ENTERED = 2;
-
-    uint256 private _status;
-
-    /**
-     * @dev Unauthorized reentrant call.
-     */
-    error ReentrancyGuardReentrantCall();
-
-    constructor() {
-        _status = NOT_ENTERED;
-    }
-
-    /**
-     * @dev Prevents a contract from calling itself, directly or indirectly.
-     * Calling a `nonReentrant` function from another `nonReentrant`
-     * function is not supported. It is possible to prevent this from happening
-     * by making the `nonReentrant` function external, and making it call a
-     * `private` function that does the actual work.
-     */
-    modifier nonReentrant() {
-        _nonReentrantBefore();
-        _;
-        _nonReentrantAfter();
-    }
-
-    function _nonReentrantBefore() private {
-        // On the first call to nonReentrant, _status will be NOT_ENTERED
-        if (_status == ENTERED) {
-            revert ReentrancyGuardReentrantCall();
-        }
-
-        // Any calls to nonReentrant after this point will fail
-        _status = ENTERED;
-    }
-
-    function _nonReentrantAfter() private {
-        // By storing the original value once again, a refund is triggered (see
-        // https://eips.ethereum.org/EIPS/eip-2200)
-        _status = NOT_ENTERED;
-    }
-
-    /**
-     * @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
-     * `nonReentrant` function in the call stack.
-     */
-    function _reentrancyGuardEntered() internal view returns (bool) {
-        return _status == ENTERED;
     }
 }
 
@@ -287,6 +233,167 @@ abstract contract Pausable is Context {
     }
 }
 
+// OpenZeppelin Contracts (last updated v5.0.0) (utils/ReentrancyGuard.sol)
+
+/**
+ * @dev Contract module that helps prevent reentrant calls to a function.
+ *
+ * Inheriting from `ReentrancyGuard` will make the {nonReentrant} modifier
+ * available, which can be applied to functions to make sure there are no nested
+ * (reentrant) calls to them.
+ *
+ * Note that because there is a single `nonReentrant` guard, functions marked as
+ * `nonReentrant` may not call one another. This can be worked around by making
+ * those functions `private`, and then adding `external` `nonReentrant` entry
+ * points to them.
+ *
+ * TIP: If you would like to learn more about reentrancy and alternative ways
+ * to protect against it, check out our blog post
+ * https://blog.openzeppelin.com/reentrancy-after-istanbul/[Reentrancy After Istanbul].
+ */
+abstract contract ReentrancyGuard {
+    // Booleans are more expensive than uint256 or any type that takes up a full
+    // word because each write operation emits an extra SLOAD to first read the
+    // slot's contents, replace the bits taken up by the boolean, and then write
+    // back. This is the compiler's defense against contract upgrades and
+    // pointer aliasing, and it cannot be disabled.
+
+    // The values being non-zero value makes deployment a bit more expensive,
+    // but in exchange the refund on every call to nonReentrant will be lower in
+    // amount. Since refunds are capped to a percentage of the total
+    // transaction's gas, it is best to keep them low in cases like this one, to
+    // increase the likelihood of the full refund coming into effect.
+    uint256 private constant NOT_ENTERED = 1;
+    uint256 private constant ENTERED = 2;
+
+    uint256 private _status;
+
+    /**
+     * @dev Unauthorized reentrant call.
+     */
+    error ReentrancyGuardReentrantCall();
+
+    constructor() {
+        _status = NOT_ENTERED;
+    }
+
+    /**
+     * @dev Prevents a contract from calling itself, directly or indirectly.
+     * Calling a `nonReentrant` function from another `nonReentrant`
+     * function is not supported. It is possible to prevent this from happening
+     * by making the `nonReentrant` function external, and making it call a
+     * `private` function that does the actual work.
+     */
+    modifier nonReentrant() {
+        _nonReentrantBefore();
+        _;
+        _nonReentrantAfter();
+    }
+
+    function _nonReentrantBefore() private {
+        // On the first call to nonReentrant, _status will be NOT_ENTERED
+        if (_status == ENTERED) {
+            revert ReentrancyGuardReentrantCall();
+        }
+
+        // Any calls to nonReentrant after this point will fail
+        _status = ENTERED;
+    }
+
+    function _nonReentrantAfter() private {
+        // By storing the original value once again, a refund is triggered (see
+        // https://eips.ethereum.org/EIPS/eip-2200)
+        _status = NOT_ENTERED;
+    }
+
+    /**
+     * @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
+     * `nonReentrant` function in the call stack.
+     */
+    function _reentrancyGuardEntered() internal view returns (bool) {
+        return _status == ENTERED;
+    }
+}
+
+// OpenZeppelin Contracts (last updated v5.0.0) (token/ERC20/utils/SafeERC20.sol)
+
+// OpenZeppelin Contracts (last updated v5.0.0) (token/ERC20/IERC20.sol)
+
+/**
+ * @dev Interface of the ERC20 standard as defined in the EIP.
+ */
+interface IERC20 {
+    /**
+     * @dev Emitted when `value` tokens are moved from one account (`from`) to
+     * another (`to`).
+     *
+     * Note that `value` may be zero.
+     */
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
+    /**
+     * @dev Emitted when the allowance of a `spender` for an `owner` is set by
+     * a call to {approve}. `value` is the new allowance.
+     */
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+
+    /**
+     * @dev Returns the value of tokens in existence.
+     */
+    function totalSupply() external view returns (uint256);
+
+    /**
+     * @dev Returns the value of tokens owned by `account`.
+     */
+    function balanceOf(address account) external view returns (uint256);
+
+    /**
+     * @dev Moves a `value` amount of tokens from the caller's account to `to`.
+     *
+     * Returns a boolean value indicating whether the operation succeeded.
+     *
+     * Emits a {Transfer} event.
+     */
+    function transfer(address to, uint256 value) external returns (bool);
+
+    /**
+     * @dev Returns the remaining number of tokens that `spender` will be
+     * allowed to spend on behalf of `owner` through {transferFrom}. This is
+     * zero by default.
+     *
+     * This value changes when {approve} or {transferFrom} are called.
+     */
+    function allowance(address owner, address spender) external view returns (uint256);
+
+    /**
+     * @dev Sets a `value` amount of tokens as the allowance of `spender` over the
+     * caller's tokens.
+     *
+     * Returns a boolean value indicating whether the operation succeeded.
+     *
+     * IMPORTANT: Beware that changing an allowance with this method brings the risk
+     * that someone may use both the old and the new allowance by unfortunate
+     * transaction ordering. One possible solution to mitigate this race
+     * condition is to first reduce the spender's allowance to 0 and set the
+     * desired value afterwards:
+     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+     *
+     * Emits an {Approval} event.
+     */
+    function approve(address spender, uint256 value) external returns (bool);
+
+    /**
+     * @dev Moves a `value` amount of tokens from `from` to `to` using the
+     * allowance mechanism. `value` is then deducted from the caller's
+     * allowance.
+     *
+     * Returns a boolean value indicating whether the operation succeeded.
+     *
+     * Emits a {Transfer} event.
+     */
+    function transferFrom(address from, address to, uint256 value) external returns (bool);
+}
+
 // OpenZeppelin Contracts (last updated v5.0.0) (token/ERC20/extensions/IERC20Permit.sol)
 
 /**
@@ -374,7 +481,6 @@ interface IERC20Permit {
     // solhint-disable-next-line func-name-mixedcase
     function DOMAIN_SEPARATOR() external view returns (bytes32);
 }
-
 
 // OpenZeppelin Contracts (last updated v5.0.0) (utils/Address.sol)
 
@@ -533,84 +639,6 @@ library Address {
     }
 }
 
-// OpenZeppelin Contracts (last updated v5.0.0) (token/ERC20/IERC20.sol)
-
-/**
- * @dev Interface of the ERC20 standard as defined in the EIP.
- */
-interface IERC20 {
-    /**
-     * @dev Emitted when `value` tokens are moved from one account (`from`) to
-     * another (`to`).
-     *
-     * Note that `value` may be zero.
-     */
-    event Transfer(address indexed from, address indexed to, uint256 value);
-
-    /**
-     * @dev Emitted when the allowance of a `spender` for an `owner` is set by
-     * a call to {approve}. `value` is the new allowance.
-     */
-    event Approval(address indexed owner, address indexed spender, uint256 value);
-
-    /**
-     * @dev Returns the value of tokens in existence.
-     */
-    function totalSupply() external view returns (uint256);
-
-    /**
-     * @dev Returns the value of tokens owned by `account`.
-     */
-    function balanceOf(address account) external view returns (uint256);
-
-    /**
-     * @dev Moves a `value` amount of tokens from the caller's account to `to`.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * Emits a {Transfer} event.
-     */
-    function transfer(address to, uint256 value) external returns (bool);
-
-    /**
-     * @dev Returns the remaining number of tokens that `spender` will be
-     * allowed to spend on behalf of `owner` through {transferFrom}. This is
-     * zero by default.
-     *
-     * This value changes when {approve} or {transferFrom} are called.
-     */
-    function allowance(address owner, address spender) external view returns (uint256);
-
-    /**
-     * @dev Sets a `value` amount of tokens as the allowance of `spender` over the
-     * caller's tokens.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * IMPORTANT: Beware that changing an allowance with this method brings the risk
-     * that someone may use both the old and the new allowance by unfortunate
-     * transaction ordering. One possible solution to mitigate this race
-     * condition is to first reduce the spender's allowance to 0 and set the
-     * desired value afterwards:
-     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-     *
-     * Emits an {Approval} event.
-     */
-    function approve(address spender, uint256 value) external returns (bool);
-
-    /**
-     * @dev Moves a `value` amount of tokens from `from` to `to` using the
-     * allowance mechanism. `value` is then deducted from the caller's
-     * allowance.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * Emits a {Transfer} event.
-     */
-    function transferFrom(address from, address to, uint256 value) external returns (bool);
-}
-
-
 /**
  * @title SafeERC20
  * @dev Wrappers around ERC20 operations that throw on failure (when the token
@@ -721,10 +749,10 @@ library SafeERC20 {
     }
 }
 
+pragma solidity >=0.8.0 < 0.9.0;
 
-pragma solidity =0.8.19;
-
-contract RewarderFlat is Pausable, ReentrancyGuard, Ownable {
+// WARNING: TESTING IN PRODUCTION -- DO NOT DUPLICATE //
+contract Rewarder is Pausable, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
     
     IERC20 public RewardToken;
@@ -735,9 +763,217 @@ contract RewarderFlat is Pausable, ReentrancyGuard, Ownable {
         string email;
     }
 
-    constructor(address _rewardToken) {
+    constructor(address _rewardToken) Ownable(msg.sender) {
         RewardToken = IERC20(_rewardToken);
     }
 
-    // todo: add from source contract.
+    // maps: an address to UserInfo.
+    mapping(address => UserInfo) public userInfo;
+    // maps: email to an address.
+    mapping (string => address) public userAddress;
+
+    // lists: emails
+    string[] public emails;
+    string[] public unverifiedEmails;
+    string[] public verifiedEmails;
+
+    // note: must be registered to verify.
+    mapping(string => bool) public isVerified;
+    // note: must be registered to claim rewards.
+    mapping(string => bool) public isRegistered;
+
+    // broadcasts: registration.
+    event Registered(address user, string email, uint timeStamp);
+
+    // broadcasts: claim.
+    event Claimed(address user, uint amount, uint timeStamp);
+
+    // broadcasts: verification.
+    event Verified(address user, string email, uint timeStamp);
+
+    //////////////////////////////
+        /*/ USER FUNCTIONS /*/    
+    //////////////////////////////
+
+    // assigns: email to msg.sender.
+    function register(string memory email) external whenNotPaused {
+        require(!isRegistered[email], 'email already registered');
+        
+        // gets: userInfo[msg.sender].
+        UserInfo storage user = userInfo[msg.sender];
+
+        require(_register(email), 'failed to register email');
+        
+        // sets: email associated with address.
+        user.email = email;
+    
+        // maps: email to msg.sender.
+        userAddress[email] = msg.sender;
+
+        // emits: registration event.
+        emit Registered(msg.sender, email, block.timestamp);
+
+    }
+
+    // claims: pending rewards associated with msg.sender.
+    function claim() external whenNotPaused nonReentrant {
+        // gets: userInfo[msg.sender].
+        UserInfo storage user = userInfo[msg.sender];
+        require(user.postCount >= user.claimed, "no rewards to claim");
+        
+        // checks: email is verified.
+        string memory email = user.email;
+        require(isVerified[email], 'email not verified');
+
+        // gets: claimable as postCount - claimed.
+        uint claimable = user.postCount - user.claimed;
+        
+        // updates: claimed.
+        user.claimed = user.claimed + claimable;
+        
+        // sends: claimable to msg.sender.
+        RewardToken.safeTransfer(msg.sender, claimable);
+
+        // emits: claim event.
+        emit Claimed(msg.sender, claimable, block.timestamp);
+    }
+
+    //////////////////////////////
+        /*/ VIEW FUNCTIONS /*/    
+    //////////////////////////////
+
+    // gets: claimable amount from post - claimed.
+    function getClaimable(address account) public view returns (uint claimable) {
+        // gets: userInfo.
+        UserInfo storage user = userInfo[account];
+        // sets: claimable to postCount - claimed.
+        claimable =
+            user.postCount == user.claimed ? 0
+            : user.postCount - user.claimed;
+    }
+
+    // gets: address associated with a given email.
+    function getAddress(string memory email) external view returns (address) {
+       return userAddress[email];
+    }
+
+    //////////////////////////////
+      /*/ INTERNAL FUNCTIONS /*/  
+    //////////////////////////////
+    
+    function _register(string memory _email) internal returns (bool) {
+        uint length = emails.length;
+    
+        // checks: email is unique.
+        for (uint i = 0; i < length; ++i) {
+           require(
+                // gets emails[i] and compares to _email.
+                keccak256(abi.encodePacked(emails[i])) 
+                != keccak256(abi.encodePacked(_email)),
+                'email already registered'
+            );
+        }
+
+        // registers: email.
+        isRegistered[_email] = true;
+
+        // updates: emails list.
+        emails.push(_email);
+
+        // updates: pending (unverifiedEmails) emails list.
+        require(updatePending(), 'unable to update pending');
+
+        return true;
+    }
+
+    // sets: unverifiedEmails
+    function updatePending() internal returns (bool) {
+        uint length = emails.length;
+        // resets: unverifiedEmails.
+        unverifiedEmails = new string[](0);
+        
+        // iterates: emails and checks for unverifiedEmails addresses.
+        for (uint i = 0; i < length; ++i) {
+           if (!isVerified[emails[i]]) {
+               unverifiedEmails.push(emails[i]);
+           }
+        }
+
+        return true;
+    }
+
+    ///////////////////////////////
+        /*/ ADMIN FUNCTIONS /*/    
+    ///////////////////////////////
+
+    // toggles: contract pause state.
+    function togglePause() external onlyOwner {
+        paused() ? _unpause() : _pause();
+    }
+
+    // sets: post count associated with a given user.
+    function setPostCount(string memory email, uint posts) external onlyOwner {
+        // gets: userInfo[userAddress].
+        UserInfo storage user = userInfo[userAddress[email]];
+
+        // checks: update required.
+        require(user.postCount < posts, 'no update required');
+
+        // sets: postCount.
+        user.postCount = posts;
+    }
+
+    // note: not trustless.
+    function verifyEmail(string memory email) external onlyOwner {
+        require(isRegistered[email], 'email not registered');
+        require(!isVerified[email], 'email already verified');
+ 
+        // verifies: email.
+        isVerified[email] = true;
+
+        // gets: account associated with email.
+        address account = userAddress[email];
+
+        // emits: verification event.
+        emit Verified(account, email, block.timestamp);
+    }
+
+    // registers: email.
+    function registerEmail(string memory email) external onlyOwner {
+        require(!isRegistered[email], 'email already registered');
+        isRegistered[email] = true;
+    }
+   
+    // updates: email for a given user.
+    function updateEmail(string memory email, address account) external onlyOwner {
+
+        // registers: unregistered email.
+        if(!isRegistered[email]) {
+            _register(email);
+        }
+
+        // gets: userInfo.
+        UserInfo storage user = userInfo[account];
+
+        // sets: email associated with address.
+        user.email = email;
+    }
+
+        // gets: list of unverified emails.
+    function updateUnverified() external onlyOwner returns (string[] memory _unverifiedEmails) {
+        uint length = emails.length;
+        // resets: unverifiedEmails.
+        unverifiedEmails = new string[](0);
+        
+        // iterates: emails and checks for unverifiedEmails addresses.
+        for (uint i = 0; i < length; ++i) {
+           if (!isVerified[emails[i]]) {
+               unverifiedEmails.push(emails[i]);
+           }
+        }
+
+        // returns: unverified emails.
+        _unverifiedEmails = unverifiedEmails;
+    }
+
 }
