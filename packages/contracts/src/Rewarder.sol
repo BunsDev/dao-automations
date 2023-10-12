@@ -31,6 +31,7 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
     // counters
     uint public totalEmails;
     uint public totalVerified;
+    uint public totalUnclaimed;
 
     // lists: emails
     string[] public emails;
@@ -90,6 +91,9 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
         
         // updates: claimed.
         user.claimed = user.claimed + claimable;
+
+        // updates: totalUnclaimed by removing claimable amount.
+        totalUnclaimed -= claimable;
         
         // sends: claimable to msg.sender.
         RewardToken.safeTransfer(msg.sender, claimable);
@@ -110,6 +114,20 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
         claimable =
             user.postCount == user.claimed ? 0
             : user.postCount - user.claimed;
+    }
+    
+    // gets: postCount for a given email.
+    function getPostCount(string memory email) public view returns (uint postCount) {
+        // checks: email address is registered.
+        require(isRegistered[email], 'email not registered');
+        // gets: account for a given email.
+        address account = userAddress[email];
+
+        // gets: userInfo.
+        UserInfo storage user = userInfo[account];
+        
+        // returns: postCount for given user.
+        postCount = user.postCount;
     }
 
     // gets: address associated with a given email.
@@ -181,8 +199,14 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
         // checks: update required.
         require(user.postCount < posts, 'no update required');
 
+        // gets: delta as posts - postCount.
+        uint delta = posts - user.postCount;
+
         // sets: postCount.
         user.postCount = posts;
+
+        // adds: delta to totalUnclaimed
+        totalUnclaimed += delta;
     }
 
     // note: not trustless.
@@ -222,7 +246,7 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
         user.email = email;
     }
 
-        // gets: list of unverified emails.
+    // gets: list of unverified emails.
     function updateUnverified() external onlyOwner returns (string[] memory _unverifiedEmails) {
         // resets: unverifiedEmails.
         unverifiedEmails = new string[](0);

@@ -286,6 +286,25 @@
         "inputs": [
             {
                 "internalType": "string",
+                "name": "email",
+                "type": "string"
+            }
+        ],
+        "name": "getPostCount",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "postCount",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
                 "name": "",
                 "type": "string"
             }
@@ -407,6 +426,19 @@
     {
         "inputs": [],
         "name": "totalEmails",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "totalUnclaimed",
         "outputs": [
             {
                 "internalType": "uint256",
