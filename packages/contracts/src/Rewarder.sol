@@ -35,11 +35,7 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
 
     // lists: emails
     string[] public emails;
-    string[] public unverifiedEmails;
-    string[] public verifiedEmails;
 
-    // note: must be registered to verify.
-    mapping(string => bool) public isVerified;
     // note: must be registered to claim rewards.
     mapping(string => bool) public isRegistered;
 
@@ -49,32 +45,9 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
     // broadcasts: claim.
     event Claimed(address user, uint amount, uint timeStamp);
 
-    // broadcasts: verification.
-    event Verified(address user, string email, uint timeStamp);
-
     //////////////////////////////
         /*/ USER FUNCTIONS /*/    
     //////////////////////////////
-
-    // assigns: email to msg.sender.
-    function register(string memory email) external whenNotPaused {
-        require(!isRegistered[email], 'email already registered');
-        
-        // gets: userInfo[msg.sender].
-        UserInfo storage user = userInfo[msg.sender];
-
-        require(_register(email), 'failed to register email');
-        
-        // sets: email associated with address.
-        user.email = email;
-    
-        // maps: email to msg.sender.
-        userAddress[email] = msg.sender;
-
-        // emits: registration event.
-        emit Registered(msg.sender, email, block.timestamp);
-
-    }
 
     // claims: pending rewards associated with msg.sender.
     function claim() external whenNotPaused nonReentrant {
@@ -84,7 +57,7 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
         
         // checks: email is verified.
         string memory email = user.email;
-        require(isVerified[email], 'email not verified');
+        require(isRegistered[email], 'email not verified');
 
         // gets: claimable as postCount - claimed.
         uint claimable = user.postCount - user.claimed;
@@ -161,24 +134,6 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
         // increments: total number of emails.
         totalEmails++;
 
-        // updates: pending (unverifiedEmails) emails list.
-        require(updatePending(), 'unable to update pending');
-
-        return true;
-    }
-
-    // sets: unverifiedEmails
-    function updatePending() internal returns (bool) {
-        // resets: unverifiedEmails.
-        unverifiedEmails = new string[](0);
-
-        // iterates: emails and checks for unverifiedEmails addresses.
-        for (uint i = 0; i < totalEmails; ++i) {
-           if (!isVerified[emails[i]]) {
-               unverifiedEmails.push(emails[i]);
-           }
-        }
-
         return true;
     }
 
@@ -193,73 +148,55 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
 
     // sets: post count associated with a given user.
     function setPostCount(string memory email, uint posts) external onlyOwner {
+        // note: assumes 18 decimals.
+        uint postCount = posts * 1E18;
+
         // gets: userInfo[userAddress].
         UserInfo storage user = userInfo[userAddress[email]];
 
         // checks: update required.
-        require(user.postCount < posts, 'no update required');
+        require(user.postCount < postCount, 'no update required');
 
         // gets: delta as posts - postCount.
-        uint delta = posts - user.postCount;
+        uint delta = postCount - user.postCount;
 
         // sets: postCount.
-        user.postCount = posts;
+        user.postCount = postCount;
 
         // adds: delta to totalUnclaimed
         totalUnclaimed += delta;
     }
 
-    // note: not trustless.
-    function verifyEmail(string memory email) external onlyOwner {
-        require(isRegistered[email], 'email not registered');
-        require(!isVerified[email], 'email already verified');
- 
-        // verifies: email.
-        isVerified[email] = true;
-        verifiedEmails.push(email);
-
-        // gets: account associated with email.
-        address account = userAddress[email];
-
-        // emits: verification event.
-        emit Verified(account, email, block.timestamp);
-    }
-
-    // registers: email.
-    function registerEmail(string memory email) external onlyOwner {
+    // assigns: email to msg.sender.
+    function registerUser(address account, string memory email) external onlyOwner {
         require(!isRegistered[email], 'email already registered');
-        isRegistered[email] = true;
-    }
-   
-    // updates: email for a given user.
-    function updateEmail(string memory email, address account) external onlyOwner {
-
-        // registers: unregistered email.
-        if(!isRegistered[email]) {
-            _register(email);
-        }
-
-        // gets: userInfo.
+        
+        // gets: userInfo[msg.sender].
         UserInfo storage user = userInfo[account];
 
+        require(_register(email), 'failed to register email');
+        
         // sets: email associated with address.
         user.email = email;
+    
+        // maps: email to account.
+        userAddress[email] = account;
+
+        // emits: registration event.
+        emit Registered(account, email, block.timestamp);
     }
 
-    // gets: list of unverified emails.
-    function updateUnverified() external onlyOwner returns (string[] memory _unverifiedEmails) {
-        // resets: unverifiedEmails.
-        unverifiedEmails = new string[](0);
-        
-        // iterates: emails and checks for unverifiedEmails addresses.
-        for (uint i = 0; i < totalEmails; ++i) {
-           if (!isVerified[emails[i]]) {
-               unverifiedEmails.push(emails[i]);
-           }
-        }
+    function allocateRewards() external onlyOwner {
+        uint rewardBalance = RewardToken.balanceOf(address(this));
 
-        // returns: unverified emails.
-        _unverifiedEmails = unverifiedEmails;
+        // checks: there is a need for allocation
+        require(totalUnclaimed <= rewardBalance, 'no allocation needed');
+
+        // gets: amount toAllocate
+        uint toAllocate = totalUnclaimed - rewardBalance;
+
+        // transfers: rewards to contract.
+        RewardToken.safeTransferFrom(msg.sender, address(this), toAllocate);
     }
 
 }
