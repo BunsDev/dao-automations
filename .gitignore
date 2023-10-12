@@ -21,3 +21,10 @@ node_modules
 
 ## VSCode
 .vscode
+
+# Miscellaneous
+/cache/
+/out/
+yarn-error.log
+/broadcast/
+/bin/
