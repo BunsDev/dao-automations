@@ -744,6 +744,8 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
     // maps: email to an address.
     mapping (string => address) public userAddress;
 
+    // note: helps automation identify emails that require verification.
+    mapping(string => bool) public unverifiedEmails;
     // note: must be registered to verify.
     mapping(string => bool) public verifiedEmails;
     // note: must be registered to claim rewards.
@@ -759,6 +761,10 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
         registeredEmails[email] = true;
         // sets: email associated with address.
         user.email = email;
+
+        // adds: email to unverified list.
+        unverifiedEmails[email] = true;
+
         // maps: email to msg.sender.
         userAddress[email] = msg.sender;
     }
@@ -835,6 +841,7 @@ contract Rewarder is Pausable, ReentrancyGuard, Ownable {
         require(!verifiedEmails[email], 'email already verified');
  
         // verifies: email.
+        unverifiedEmails[email] = false;
         verifiedEmails[email] = true;
     }
 
