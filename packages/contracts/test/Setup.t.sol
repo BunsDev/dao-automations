@@ -2,11 +2,11 @@
 pragma solidity =0.8.19;
 
 import "../src/RewardToken.sol";
-import "../src/Rewarder.sol";
+import { Rewarder } from "../src/Rewarder.sol";
 
-import { stdStorage, StdStorage, Test, Vm } from "forge-std/Test.sol";
+import { stdStorage, StdStorage, Test, Vm } from "../forge-std/src/Test.sol";
 import { Utilities } from "./utils/Utilities.sol";
-import { console } from "forge-std/console.sol";
+import { console } from "../forge-std/src/console.sol";
 
 contract Setup is Test {
 
@@ -19,6 +19,7 @@ contract Setup is Test {
 
     // constants
     uint public immutable INITIAL_SUPPLY = 1_000_000;
+    string public EMAIL_ADDRESS_ONE = 'bunsthedev@gmail.com';
 
     // addresses
     address public TOKEN_ADDRESS;
@@ -28,15 +29,15 @@ contract Setup is Test {
     address public OWNER_ADDRESS = 0x3B356568511d38EEa29939b41A2B1DA9b162C97E;
     address public USER_ADDRESS = address(0xbae);
 
+
+
     constructor() {
         // initializes: token
         TokenContract = new RewardToken(
-            "RewardToken",
-            "RTKN",
             INITIAL_SUPPLY
         );
 
-        TOKEN_ADDRESS = address(TokenContact);
+        TOKEN_ADDRESS = address(TokenContract);
         console.log('[success]: token deployed');
 
         // initializes: rewarder
