@@ -38,7 +38,7 @@ contract Setup is Test {
         );
 
         TOKEN_ADDRESS = address(RewardContract);
-        console.log('[success]: token deployed');
+        // console.log('[success]: token deployed');
 
         // initializes: rewarder
         RewarderContract = new Rewarder(
@@ -46,7 +46,7 @@ contract Setup is Test {
         );
 
         REWARDER_ADDRESS = address(RewarderContract);
-        console.log('[success]: rewarder deployed');
+        // console.log('[success]: rewarder deployed');
     }
 
     // helpers

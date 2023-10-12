@@ -9,14 +9,22 @@ contract RewarderTest is Test, Setup {
         return REWARDER_ADDRESS;
     }
 
-    // test: register email
-    function test_registerEmail() public {
+    function registerEmail() public returns (bool) {
         // imitates: user
-        vm.startPrank(USER_ADDRESS);
+        vm.prank(USER_ADDRESS);
 
         // registers: email
-        RewarderContract.registerEmail(EMAIL_ADDRESS_ONE);
+        RewarderContract.register(EMAIL_ADDRESS_ONE);
 
+        return RewarderContract.registeredEmails(EMAIL_ADDRESS_ONE);
+    }
+
+    // test: register email
+    function test_registerEmail() public {
+
+        // registers: email
+        require(registerEmail(), 'failed to register email');
+    
         // checks: registered and unverified.
         assertTrue(RewarderContract.registeredEmails(EMAIL_ADDRESS_ONE));
         console.log("[success]: email registered");
@@ -26,11 +34,15 @@ contract RewarderTest is Test, Setup {
 
         assertTrue(RewarderContract.verifiedEmails(EMAIL_ADDRESS_ONE) == false);
         console.log("[success]: email NOT verified");
+
     }
 
     function test_verifyEmail() public {
+        // triggers: email registration
+        require(registerEmail(), 'failed to register email');
+
         // imitates: owner
-        vm.startPrank(RewarderContract.owner());
+        vm.startPrank(address(0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496));
 
         // verifies: email
         RewarderContract.verifyEmail(EMAIL_ADDRESS_ONE);
@@ -46,5 +58,5 @@ contract RewarderTest is Test, Setup {
 
         assertTrue(RewarderContract.verifiedEmails(EMAIL_ADDRESS_ONE));
         console.log("[success]: email verified");
-        }
+    }
 }
