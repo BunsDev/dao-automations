@@ -38,7 +38,7 @@ exports.handler = async function() {
       totalActiveUsers ++
   }
 
-  // console.log(users)
+  // console.log(activeUsers)
 
   // initializes: wallet
   const chainId = '250'
@@ -105,20 +105,19 @@ exports.handler = async function() {
     let qualifiedEmails = []
     let qualifiedPosts = []
     let qualifiedWallets = []
-
     let totalQualifiedUsers = 0
 
     // seaches all activeUsers and returns if registeredEmail is a match.
     for (i=0; i < totalActiveUsers; i++) {
       // iterates: through each registeredEmail.
       let email = registeredEmails[i]
-      let postCount = activePosts[i]
       // checks: each registeredEmail for all activeUser.
       for (j=0; j < totalActiveUsers; j++) {
-        let eligibleEmail = activeEmails[j]
         // checks: if registeredEmail matches with activeEmail.
-        if (email == eligibleEmail) {
-              // gets: walletAddress for each eligibleEmail
+        if (email == activeEmails[j]) {
+              // gets: postCount for each eligibleEmail.
+              let postCount = activePosts[j]
+              // gets: walletAddress for each eligibleEmail.
               let walletAddress  = await Rewarder.getAddress(email, overrides)
               
               // updates: qualified lists.
@@ -136,26 +135,43 @@ exports.handler = async function() {
     await postToSlack(post_qualifiedEmails);
     console.log('[.√.] posted qualifiedEmails to Slack')
 
+    // approves: allocation to rewarder address.
+    const rewardBalance = await RewardToken.balanceOf(RewarderAddress, overrides)
+    const totalUnclaimed = await Rewarder.totalUnclaimed(overrides)
+    
+    // checks: if rewarder has enough funds to claim rewards.
+    const refillNeeded = Number(totalUnclaimed) <= Number(rewardBalance) ? 0 : Number(totalUnclaimed) - Number(rewardBalance)
+    console.log('refillNeeded: %s', (refillNeeded / 1e18).toString())
+    if (refillNeeded > 0) {
+      // sends: refill to rewarder address to ensure rewards are claimable.
+      const allocationTx = await RewardToken.transfer(RewarderAddress, (refillNeeded).toString(), overrides)
+      await allocationTx.wait()
+
+      const post_allocationConfirmation = `[.√.] transferred ${refillNeeded / 1e18} tokens to rewarder: ${explorer}/tx/${allocationTx.hash}`
+      postToSlack(post_allocationConfirmation)
+      console.log(post_allocationConfirmation)
+
+    }
+
     for (i=0; i<totalQualifiedUsers; i++) {
       // gets: stored postCount for each qualifiedUser.
-      let postCount_contract = await Rewarder.getPostCount(qualifiedEmails[i], overrides)
+      let _postCount_contract = await Rewarder.getPostCount(qualifiedEmails[i], overrides) 
+      let postCount_contract = _postCount_contract / 1e18
       let postCount_api = qualifiedPosts[i]
       console.log(`postCount(api) [${i}]: ${postCount_api}`)
       console.log(`postCount(contract) [${i}]: ${postCount_contract}`)
 
       let toAllocate = Number(postCount_api) - Number(postCount_contract)
+
       if (toAllocate > 0) {
         // updates: postCount for each qualifiedUser.
-        // const updateCountTx = await Rewarder.setPostCount(qualifiedEmails[i], toAllocate, overrides)
-        // sends: refill to rewarder address to ensure rewards are claimable.
-        // const allocationTx = await RewardToken.transfer(RewarderAddress, toAllocate, overrides)
-        console.log('toAllocate:', toAllocate)
-        // const post_updateConfirmation = `:white_check_mark: updated post count for ${qualifiedEmails[i]} to ${toAllocate}: ${explorer}/tx/${updateCountTx.hash}`
-        // const post_allocationConfirmation = `:white_check_mark: transferred ${toAllocate} tokens to rewarder: ${explorer}/tx/${allocationTx.hash}`
-        // postToSlack(post_updateConfirmation)
-        // console.log(post_updateConfirmation)
-        // postToSlack(post_allocationConfirmation)
-        // console.log(post_allocationConfirmation)
+        const updateCountTx = await Rewarder.setPostCount(qualifiedEmails[i], toAllocate, overrides)
+        await updateCountTx.wait()
+
+        // console.log('toAllocate:', toAllocate)
+        const post_updateConfirmation = `[.√.] updated post count for ${qualifiedEmails[i]} to ${toAllocate}: ${explorer}/tx/${updateCountTx.hash}`
+        postToSlack(post_updateConfirmation)
+        console.log(post_updateConfirmation)
       }
     }
   } catch (err) {
