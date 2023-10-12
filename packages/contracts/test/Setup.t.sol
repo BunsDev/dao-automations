@@ -4,15 +4,15 @@ pragma solidity =0.8.19;
 import "../src/RewardToken.sol";
 import { Rewarder } from "../src/Rewarder.sol";
 
-import { stdStorage, StdStorage, Test, Vm } from "../forge-std/src/Test.sol";
+import { stdStorage, StdStorage, Test, Vm } from "./utils/Test.sol";
 import { Utilities } from "./utils/Utilities.sol";
-import { console } from "../forge-std/src/console.sol";
+import { console } from "./utils/test/console.sol";
 
 contract Setup is Test {
 
     // contracts
-    RewardToken TokenContract;
-    Rewarder RewardContract;
+    RewardToken RewardContract;
+    Rewarder RewarderContract;
 
     // helpers
     Utilities internal utils;
@@ -33,19 +33,19 @@ contract Setup is Test {
 
     constructor() {
         // initializes: token
-        TokenContract = new RewardToken(
+        RewardContract = new RewardToken(
             INITIAL_SUPPLY
         );
 
-        TOKEN_ADDRESS = address(TokenContract);
+        TOKEN_ADDRESS = address(RewardContract);
         console.log('[success]: token deployed');
 
         // initializes: rewarder
-        RewardContract = new Rewarder(
+        RewarderContract = new Rewarder(
             TOKEN_ADDRESS
         );
 
-        REWARDER_ADDRESS = address(RewardContract);
+        REWARDER_ADDRESS = address(RewarderContract);
         console.log('[success]: rewarder deployed');
     }
 

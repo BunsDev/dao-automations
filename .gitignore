@@ -22,9 +22,10 @@ node_modules
 ## VSCode
 .vscode
 
-# Miscellaneous
+# Forge
 /cache/
 out
 yarn-error.log
 broadcast
 bin
+cache

@@ -1,434 +1,371 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: Unlicense
+pragma solidity >=0.6.0 <0.9.0;
 
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+import "./Vm.sol";
+import "./test/test.sol";
+import "./console.sol";
 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// Wrappers around Cheatcodes to avoid footguns
+abstract contract Test is DSTest {
+    using stdStorage for StdStorage;
 
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    event WARNING_Deprecated(string msg);
 
-pragma solidity >=0.4.23;
+    Vm public constant vm = Vm(HEVM_ADDRESS);
+    StdStorage internal stdstore;
 
-contract DSTest {
-    event log                    (string);
-    event logs                   (bytes);
-
-    event log_address            (address);
-    event log_bytes32            (bytes32);
-    event log_int                (int);
-    event log_uint               (uint);
-    event log_bytes              (bytes);
-    event log_string             (string);
-
-    event log_named_address      (string key, address val);
-    event log_named_bytes32      (string key, bytes32 val);
-    event log_named_decimal_int  (string key, int val, uint decimals);
-    event log_named_decimal_uint (string key, uint val, uint decimals);
-    event log_named_int          (string key, int val);
-    event log_named_uint         (string key, uint val);
-    event log_named_bytes        (string key, bytes val);
-    event log_named_string       (string key, string val);
-
-    bool public IS_TEST = true;
-    bool public failed;
-
-    address constant HEVM_ADDRESS =
-        address(bytes20(uint160(uint256(keccak256('hevm cheat code')))));
-
-    modifier mayRevert() { _; }
-    modifier testopts(string memory) { _; }
-
-    function fail() internal {
-        failed = true;
+    // Skip forward or rewind time by the specified number of seconds
+    function skip(uint256 time) public {
+        vm.warp(block.timestamp + time);
     }
 
-    modifier logs_gas() {
-        uint startGas = gasleft();
-        _;
-        uint endGas = gasleft();
-        emit log_named_uint("gas", startGas - endGas);
+    function rewind(uint256 time) public {
+        vm.warp(block.timestamp - time);
     }
 
-    function assertTrue(bool condition) internal {
-        if (!condition) {
-            emit log("Error: Assertion Failed");
-            fail();
-        }
+    // Setup a prank from an address that has some ether
+    function hoax(address who) public {
+        vm.deal(who, 1 << 128);
+        vm.prank(who);
     }
 
-    function assertTrue(bool condition, string memory err) internal {
-        if (!condition) {
-            emit log_named_string("Error", err);
-            assertTrue(condition);
-        }
+    function hoax(address who, uint256 give) public {
+        vm.deal(who, give);
+        vm.prank(who);
     }
 
-    function assertEq(address a, address b) internal {
-        if (a != b) {
-            emit log("Error: a == b not satisfied [address]");
-            emit log_named_address("  Expected", b);
-            emit log_named_address("    Actual", a);
-            fail();
-        }
-    }
-    function assertEq(address a, address b, string memory err) internal {
-        if (a != b) {
-            emit log_named_string ("Error", err);
-            assertEq(a, b);
-        }
+    function hoax(address who, address origin) public {
+        vm.deal(who, 1 << 128);
+        vm.prank(who, origin);
     }
 
-    function assertEq(bytes32 a, bytes32 b) internal {
-        if (a != b) {
-            emit log("Error: a == b not satisfied [bytes32]");
-            emit log_named_bytes32("  Expected", b);
-            emit log_named_bytes32("    Actual", a);
-            fail();
-        }
-    }
-    function assertEq(bytes32 a, bytes32 b, string memory err) internal {
-        if (a != b) {
-            emit log_named_string ("Error", err);
-            assertEq(a, b);
-        }
-    }
-    function assertEq32(bytes32 a, bytes32 b) internal {
-        assertEq(a, b);
-    }
-    function assertEq32(bytes32 a, bytes32 b, string memory err) internal {
-        assertEq(a, b, err);
+    function hoax(address who, address origin, uint256 give) public {
+        vm.deal(who, give);
+        vm.prank(who, origin);
     }
 
-    function assertEq(int a, int b) internal {
-        if (a != b) {
-            emit log("Error: a == b not satisfied [int]");
-            emit log_named_int("  Expected", b);
-            emit log_named_int("    Actual", a);
-            fail();
-        }
+    // Start perpetual prank from an address that has some ether
+    function startHoax(address who) public {
+        vm.deal(who, 1 << 128);
+        vm.startPrank(who);
     }
-    function assertEq(int a, int b, string memory err) internal {
-        if (a != b) {
-            emit log_named_string("Error", err);
-            assertEq(a, b);
-        }
+
+    function startHoax(address who, uint256 give) public {
+        vm.deal(who, give);
+        vm.startPrank(who);
     }
-    function assertEq(uint a, uint b) internal {
-        if (a != b) {
-            emit log("Error: a == b not satisfied [uint]");
-            emit log_named_uint("  Expected", b);
-            emit log_named_uint("    Actual", a);
-            fail();
-        }
+
+    // Start perpetual prank from an address that has some ether
+    // tx.origin is set to the origin parameter
+    function startHoax(address who, address origin) public {
+        vm.deal(who, 1 << 128);
+        vm.startPrank(who, origin);
     }
-    function assertEq(uint a, uint b, string memory err) internal {
-        if (a != b) {
-            emit log_named_string("Error", err);
-            assertEq(a, b);
-        }
+
+    function startHoax(address who, address origin, uint256 give) public {
+        vm.deal(who, give);
+        vm.startPrank(who, origin);
     }
-    function assertEqDecimal(int a, int b, uint decimals) internal {
-        if (a != b) {
-            emit log("Error: a == b not satisfied [decimal int]");
-            emit log_named_decimal_int("  Expected", b, decimals);
-            emit log_named_decimal_int("    Actual", a, decimals);
-            fail();
-        }
+
+    // DEPRECATED: Use `deal` instead
+    function tip(address token, address to, uint256 give) public {
+        emit WARNING_Deprecated("The `tip` stdcheat has been deprecated. Use `deal` instead.");
+        stdstore
+            .target(token)
+            .sig(0x70a08231)
+            .with_key(to)
+            .checked_write(give);
     }
-    function assertEqDecimal(int a, int b, uint decimals, string memory err) internal {
-        if (a != b) {
-            emit log_named_string("Error", err);
-            assertEqDecimal(a, b, decimals);
-        }
+
+    // The same as Hevm's `deal`
+    // Use the alternative signature for ERC20 tokens
+    function deal(address to, uint256 give) public {
+        vm.deal(to, give);
     }
-    function assertEqDecimal(uint a, uint b, uint decimals) internal {
-        if (a != b) {
-            emit log("Error: a == b not satisfied [decimal uint]");
-            emit log_named_decimal_uint("  Expected", b, decimals);
-            emit log_named_decimal_uint("    Actual", a, decimals);
-            fail();
-        }
+
+    // Set the balance of an account for any ERC20 token
+    // Use the alternative signature to update `totalSupply`
+    function deal(address token, address to, uint256 give) public {
+        deal(token, to, give, false);
     }
-    function assertEqDecimal(uint a, uint b, uint decimals, string memory err) internal {
-        if (a != b) {
-            emit log_named_string("Error", err);
-            assertEqDecimal(a, b, decimals);
+
+    function deal(address token, address to, uint256 give, bool adjust) public {
+        // get current balance
+        (, bytes memory balData) = token.call(abi.encodeWithSelector(0x70a08231, to));
+        uint256 prevBal = abi.decode(balData, (uint256));
+
+        // update balance
+        stdstore
+            .target(token)
+            .sig(0x70a08231)
+            .with_key(to)
+            .checked_write(give);
+
+        // update total supply
+        if(adjust){
+            (, bytes memory totSupData) = token.call(abi.encodeWithSelector(0x18160ddd));
+            uint256 totSup = abi.decode(totSupData, (uint256));
+            if(give < prevBal) {
+                totSup -= (prevBal - give);
+            } else {
+                totSup += (give - prevBal);
+            }
+            stdstore
+                .target(token)
+                .sig(0x18160ddd)
+                .checked_write(totSup);
         }
     }
 
-    function assertGt(uint a, uint b) internal {
-        if (a <= b) {
-            emit log("Error: a > b not satisfied [uint]");
-            emit log_named_uint("  Value a", a);
-            emit log_named_uint("  Value b", b);
-            fail();
-        }
-    }
-    function assertGt(uint a, uint b, string memory err) internal {
-        if (a <= b) {
-            emit log_named_string("Error", err);
-            assertGt(a, b);
-        }
-    }
-    function assertGt(int a, int b) internal {
-        if (a <= b) {
-            emit log("Error: a > b not satisfied [int]");
-            emit log_named_int("  Value a", a);
-            emit log_named_int("  Value b", b);
-            fail();
-        }
-    }
-    function assertGt(int a, int b, string memory err) internal {
-        if (a <= b) {
-            emit log_named_string("Error", err);
-            assertGt(a, b);
-        }
-    }
-    function assertGtDecimal(int a, int b, uint decimals) internal {
-        if (a <= b) {
-            emit log("Error: a > b not satisfied [decimal int]");
-            emit log_named_decimal_int("  Value a", a, decimals);
-            emit log_named_decimal_int("  Value b", b, decimals);
-            fail();
-        }
-    }
-    function assertGtDecimal(int a, int b, uint decimals, string memory err) internal {
-        if (a <= b) {
-            emit log_named_string("Error", err);
-            assertGtDecimal(a, b, decimals);
-        }
-    }
-    function assertGtDecimal(uint a, uint b, uint decimals) internal {
-        if (a <= b) {
-            emit log("Error: a > b not satisfied [decimal uint]");
-            emit log_named_decimal_uint("  Value a", a, decimals);
-            emit log_named_decimal_uint("  Value b", b, decimals);
-            fail();
-        }
-    }
-    function assertGtDecimal(uint a, uint b, uint decimals, string memory err) internal {
-        if (a <= b) {
-            emit log_named_string("Error", err);
-            assertGtDecimal(a, b, decimals);
+    // Deploy a contract by fetching the contract bytecode from
+    // the artifacts directory
+    // e.g. `deployCode(code, abi.encode(arg1,arg2,arg3))`
+    function deployCode(string memory what, bytes memory args)
+        public
+        returns (address addr)
+    {
+        bytes memory bytecode = abi.encodePacked(vm.getCode(what), args);
+        assembly {
+            addr := create(0, add(bytecode, 0x20), mload(bytecode))
         }
     }
 
-    function assertGe(uint a, uint b) internal {
-        if (a < b) {
-            emit log("Error: a >= b not satisfied [uint]");
-            emit log_named_uint("  Value a", a);
-            emit log_named_uint("  Value b", b);
-            fail();
+    function deployCode(string memory what)
+        public
+        returns (address addr)
+    {
+        bytes memory bytecode = vm.getCode(what);
+        assembly {
+            addr := create(0, add(bytecode, 0x20), mload(bytecode))
         }
     }
-    function assertGe(uint a, uint b, string memory err) internal {
-        if (a < b) {
-            emit log_named_string("Error", err);
-            assertGe(a, b);
-        }
-    }
-    function assertGe(int a, int b) internal {
-        if (a < b) {
-            emit log("Error: a >= b not satisfied [int]");
-            emit log_named_int("  Value a", a);
-            emit log_named_int("  Value b", b);
-            fail();
-        }
-    }
-    function assertGe(int a, int b, string memory err) internal {
-        if (a < b) {
-            emit log_named_string("Error", err);
-            assertGe(a, b);
-        }
-    }
-    function assertGeDecimal(int a, int b, uint decimals) internal {
-        if (a < b) {
-            emit log("Error: a >= b not satisfied [decimal int]");
-            emit log_named_decimal_int("  Value a", a, decimals);
-            emit log_named_decimal_int("  Value b", b, decimals);
-            fail();
-        }
-    }
-    function assertGeDecimal(int a, int b, uint decimals, string memory err) internal {
-        if (a < b) {
-            emit log_named_string("Error", err);
-            assertGeDecimal(a, b, decimals);
-        }
-    }
-    function assertGeDecimal(uint a, uint b, uint decimals) internal {
-        if (a < b) {
-            emit log("Error: a >= b not satisfied [decimal uint]");
-            emit log_named_decimal_uint("  Value a", a, decimals);
-            emit log_named_decimal_uint("  Value b", b, decimals);
-            fail();
-        }
-    }
-    function assertGeDecimal(uint a, uint b, uint decimals, string memory err) internal {
-        if (a < b) {
-            emit log_named_string("Error", err);
-            assertGeDecimal(a, b, decimals);
-        }
+}
+
+
+library stdError {
+    bytes public constant assertionError = abi.encodeWithSignature("Panic(uint256)", 0x01);
+    bytes public constant arithmeticError = abi.encodeWithSignature("Panic(uint256)", 0x11);
+    bytes public constant divisionError = abi.encodeWithSignature("Panic(uint256)", 0x12);
+    bytes public constant enumConversionError = abi.encodeWithSignature("Panic(uint256)", 0x21);
+    bytes public constant encodeStorageError = abi.encodeWithSignature("Panic(uint256)", 0x22);
+    bytes public constant popError = abi.encodeWithSignature("Panic(uint256)", 0x31);
+    bytes public constant indexOOBError = abi.encodeWithSignature("Panic(uint256)", 0x32);
+    bytes public constant memOverflowError = abi.encodeWithSignature("Panic(uint256)", 0x41);
+    bytes public constant zeroVarError = abi.encodeWithSignature("Panic(uint256)", 0x51);
+    // DEPRECATED: Use Hevm's `expectRevert` without any arguments instead
+    bytes public constant lowLevelError = bytes(""); // `0x`
+}
+
+struct StdStorage {
+    mapping (address => mapping(bytes4 => mapping(bytes32 => uint256))) slots;
+    mapping (address => mapping(bytes4 =>  mapping(bytes32 => bool))) finds;
+    
+    bytes32[] _keys;
+    bytes4 _sig;
+    uint256 _depth;
+    address _target;
+    bytes32 _set;
+}
+
+
+library stdStorage {
+    event SlotFound(address who, bytes4 fsig, bytes32 keysHash, uint slot);
+    event WARNING_UninitedSlot(address who, uint slot);
+    
+    Vm private constant vm_std_store = Vm(address(uint160(uint256(keccak256('hevm cheat code')))));
+
+    function sigs(
+        string memory sigStr
+    )
+        internal
+        pure
+        returns (bytes4)
+    {
+        return bytes4(keccak256(bytes(sigStr)));
     }
 
-    function assertLt(uint a, uint b) internal {
-        if (a >= b) {
-            emit log("Error: a < b not satisfied [uint]");
-            emit log_named_uint("  Value a", a);
-            emit log_named_uint("  Value b", b);
-            fail();
-        }
-    }
-    function assertLt(uint a, uint b, string memory err) internal {
-        if (a >= b) {
-            emit log_named_string("Error", err);
-            assertLt(a, b);
-        }
-    }
-    function assertLt(int a, int b) internal {
-        if (a >= b) {
-            emit log("Error: a < b not satisfied [int]");
-            emit log_named_int("  Value a", a);
-            emit log_named_int("  Value b", b);
-            fail();
-        }
-    }
-    function assertLt(int a, int b, string memory err) internal {
-        if (a >= b) {
-            emit log_named_string("Error", err);
-            assertLt(a, b);
-        }
-    }
-    function assertLtDecimal(int a, int b, uint decimals) internal {
-        if (a >= b) {
-            emit log("Error: a < b not satisfied [decimal int]");
-            emit log_named_decimal_int("  Value a", a, decimals);
-            emit log_named_decimal_int("  Value b", b, decimals);
-            fail();
-        }
-    }
-    function assertLtDecimal(int a, int b, uint decimals, string memory err) internal {
-        if (a >= b) {
-            emit log_named_string("Error", err);
-            assertLtDecimal(a, b, decimals);
-        }
-    }
-    function assertLtDecimal(uint a, uint b, uint decimals) internal {
-        if (a >= b) {
-            emit log("Error: a < b not satisfied [decimal uint]");
-            emit log_named_decimal_uint("  Value a", a, decimals);
-            emit log_named_decimal_uint("  Value b", b, decimals);
-            fail();
-        }
-    }
-    function assertLtDecimal(uint a, uint b, uint decimals, string memory err) internal {
-        if (a >= b) {
-            emit log_named_string("Error", err);
-            assertLtDecimal(a, b, decimals);
-        }
-    }
+    /// @notice find an arbitrary storage slot given a function sig, input data, address of the contract and a value to check against
+    // slot complexity:
+    //  if flat, will be bytes32(uint256(uint));
+    //  if map, will be keccak256(abi.encode(key, uint(slot)));
+    //  if deep map, will be keccak256(abi.encode(key1, keccak256(abi.encode(key0, uint(slot)))));
+    //  if map struct, will be bytes32(uint256(keccak256(abi.encode(key1, keccak256(abi.encode(key0, uint(slot)))))) + structFieldDepth);
+    function find(
+        StdStorage storage self
+    ) 
+        internal 
+        returns (uint256)
+    {
+        address who = self._target;
+        bytes4 fsig = self._sig;
+        uint256 field_depth = self._depth;
+        bytes32[] memory ins = self._keys;
 
-    function assertLe(uint a, uint b) internal {
-        if (a > b) {
-            emit log("Error: a <= b not satisfied [uint]");
-            emit log_named_uint("  Value a", a);
-            emit log_named_uint("  Value b", b);
-            fail();
+        // calldata to test against
+        if (self.finds[who][fsig][keccak256(abi.encodePacked(ins, field_depth))]) {
+            return self.slots[who][fsig][keccak256(abi.encodePacked(ins, field_depth))];
         }
-    }
-    function assertLe(uint a, uint b, string memory err) internal {
-        if (a > b) {
-            emit log_named_string("Error", err);
-            assertLe(a, b);
+        bytes memory cald = abi.encodePacked(fsig, flatten(ins));
+        vm_std_store.record();
+        bytes32 fdat;
+        {
+            (, bytes memory rdat) = who.staticcall(cald);
+            fdat = bytesToBytes32(rdat, 32*field_depth);
         }
-    }
-    function assertLe(int a, int b) internal {
-        if (a > b) {
-            emit log("Error: a <= b not satisfied [int]");
-            emit log_named_int("  Value a", a);
-            emit log_named_int("  Value b", b);
-            fail();
-        }
-    }
-    function assertLe(int a, int b, string memory err) internal {
-        if (a > b) {
-            emit log_named_string("Error", err);
-            assertLe(a, b);
-        }
-    }
-    function assertLeDecimal(int a, int b, uint decimals) internal {
-        if (a > b) {
-            emit log("Error: a <= b not satisfied [decimal int]");
-            emit log_named_decimal_int("  Value a", a, decimals);
-            emit log_named_decimal_int("  Value b", b, decimals);
-            fail();
-        }
-    }
-    function assertLeDecimal(int a, int b, uint decimals, string memory err) internal {
-        if (a > b) {
-            emit log_named_string("Error", err);
-            assertLeDecimal(a, b, decimals);
-        }
-    }
-    function assertLeDecimal(uint a, uint b, uint decimals) internal {
-        if (a > b) {
-            emit log("Error: a <= b not satisfied [decimal uint]");
-            emit log_named_decimal_uint("  Value a", a, decimals);
-            emit log_named_decimal_uint("  Value b", b, decimals);
-            fail();
-        }
-    }
-    function assertLeDecimal(uint a, uint b, uint decimals, string memory err) internal {
-        if (a > b) {
-            emit log_named_string("Error", err);
-            assertGeDecimal(a, b, decimals);
-        }
-    }
-
-    function assertEq(string memory a, string memory b) internal {
-        if (keccak256(abi.encodePacked(a)) != keccak256(abi.encodePacked(b))) {
-            emit log("Error: a == b not satisfied [string]");
-            emit log_named_string("  Value a", a);
-            emit log_named_string("  Value b", b);
-            fail();
-        }
-    }
-    function assertEq(string memory a, string memory b, string memory err) internal {
-        if (keccak256(abi.encodePacked(a)) != keccak256(abi.encodePacked(b))) {
-            emit log_named_string("Error", err);
-            assertEq(a, b);
-        }
-    }
-
-    function checkEq0(bytes memory a, bytes memory b) internal pure returns (bool ok) {
-        ok = true;
-        if (a.length == b.length) {
-            for (uint i = 0; i < a.length; i++) {
-                if (a[i] != b[i]) {
-                    ok = false;
+        
+        (bytes32[] memory reads, ) = vm_std_store.accesses(address(who));
+        if (reads.length == 1) {
+            bytes32 curr = vm_std_store.load(who, reads[0]);
+            if (curr == bytes32(0)) {
+                emit WARNING_UninitedSlot(who, uint256(reads[0]));
+            }
+            if (fdat != curr) {
+                require(false, "Packed slot. This would cause dangerous overwriting and currently isnt supported");
+            }
+            emit SlotFound(who, fsig, keccak256(abi.encodePacked(ins, field_depth)), uint256(reads[0]));
+            self.slots[who][fsig][keccak256(abi.encodePacked(ins, field_depth))] = uint256(reads[0]);
+            self.finds[who][fsig][keccak256(abi.encodePacked(ins, field_depth))] = true;
+        } else if (reads.length > 1) {
+            for (uint256 i = 0; i < reads.length; i++) {
+                bytes32 prev = vm_std_store.load(who, reads[i]);
+                if (prev == bytes32(0)) {
+                    emit WARNING_UninitedSlot(who, uint256(reads[i]));
                 }
+                // store
+                vm_std_store.store(who, reads[i], bytes32(hex"1337"));
+                bool success;
+                bytes memory rdat;
+                {
+                    (success, rdat) = who.staticcall(cald);
+                    fdat = bytesToBytes32(rdat, 32*field_depth);
+                }
+                
+                if (success && fdat == bytes32(hex"1337")) {
+                    // we found which of the slots is the actual one
+                    emit SlotFound(who, fsig, keccak256(abi.encodePacked(ins, field_depth)), uint256(reads[i]));
+                    self.slots[who][fsig][keccak256(abi.encodePacked(ins, field_depth))] = uint256(reads[i]);
+                    self.finds[who][fsig][keccak256(abi.encodePacked(ins, field_depth))] = true;
+                    vm_std_store.store(who, reads[i], prev);
+                    break;
+                }
+                vm_std_store.store(who, reads[i], prev);
             }
         } else {
-            ok = false;
+            require(false, "No storage use detected for target");
         }
+
+        require(self.finds[who][fsig][keccak256(abi.encodePacked(ins, field_depth))], "NotFound");
+
+        delete self._target;
+        delete self._sig;
+        delete self._keys;
+        delete self._depth; 
+
+        return self.slots[who][fsig][keccak256(abi.encodePacked(ins, field_depth))];
     }
-    function assertEq0(bytes memory a, bytes memory b) internal {
-        if (!checkEq0(a, b)) {
-            emit log("Error: a == b not satisfied [bytes]");
-            emit log_named_bytes("  Expected", a);
-            emit log_named_bytes("    Actual", b);
-            fail();
-        }
+
+    function target(StdStorage storage self, address _target) internal returns (StdStorage storage) {
+        self._target = _target;
+        return self;
     }
-    function assertEq0(bytes memory a, bytes memory b, string memory err) internal {
-        if (!checkEq0(a, b)) {
-            emit log_named_string("Error", err);
-            assertEq0(a, b);
+
+    function sig(StdStorage storage self, bytes4 _sig) internal returns (StdStorage storage) {
+        self._sig = _sig;
+        return self;
+    }
+
+    function sig(StdStorage storage self, string memory _sig) internal returns (StdStorage storage) {
+        self._sig = sigs(_sig);
+        return self;
+    }
+
+    function with_key(StdStorage storage self, address who) internal returns (StdStorage storage) {
+        self._keys.push(bytes32(uint256(uint160(who))));
+        return self;
+    }
+
+    function with_key(StdStorage storage self, uint256 amt) internal returns (StdStorage storage) {
+        self._keys.push(bytes32(amt));
+        return self;
+    }
+    function with_key(StdStorage storage self, bytes32 key) internal returns (StdStorage storage) {
+        self._keys.push(key);
+        return self;
+    }
+
+    function depth(StdStorage storage self, uint256 _depth) internal returns (StdStorage storage) {
+        self._depth = _depth;
+        return self;
+    }
+
+    function checked_write(StdStorage storage self, address who) internal {
+        checked_write(self, bytes32(uint256(uint160(who))));
+    }
+
+    function checked_write(StdStorage storage self, uint256 amt) internal {
+        checked_write(self, bytes32(amt));
+    }
+
+    function checked_write(StdStorage storage self, bool write) internal {
+        bytes32 t;
+        assembly {
+            t := write
         }
+        checked_write(self, t);
+    }
+
+    function checked_write(
+        StdStorage storage self,
+        bytes32 set
+    ) internal {
+        address who = self._target;
+        bytes4 fsig = self._sig;
+        uint256 field_depth = self._depth;
+        bytes32[] memory ins = self._keys;
+
+        bytes memory cald = abi.encodePacked(fsig, flatten(ins));
+        if (!self.finds[who][fsig][keccak256(abi.encodePacked(ins, field_depth))]) {
+            find(self);
+        }
+        bytes32 slot = bytes32(self.slots[who][fsig][keccak256(abi.encodePacked(ins, field_depth))]);
+
+        bytes32 fdat;
+        {
+            (, bytes memory rdat) = who.staticcall(cald);
+            fdat = bytesToBytes32(rdat, 32*field_depth);
+        }
+        bytes32 curr = vm_std_store.load(who, slot);
+
+        if (fdat != curr) {
+            require(false, "Packed slot. This would cause dangerous overwriting and currently isnt supported");
+        }
+        vm_std_store.store(who, slot, set);
+        delete self._target;
+        delete self._sig;
+        delete self._keys;
+        delete self._depth; 
+    }
+
+    function bytesToBytes32(bytes memory b, uint offset) public pure returns (bytes32) {
+        bytes32 out;
+
+        uint256 max = b.length > 32 ? 32 : b.length;
+        for (uint i = 0; i < max; i++) {
+            out |= bytes32(b[offset + i] & 0xFF) >> (i * 8);
+        }
+        return out;
+    }
+
+    function flatten(bytes32[] memory b) private pure returns (bytes memory)
+    {
+        bytes memory result = new bytes(b.length * 32);
+        for (uint256 i = 0; i < b.length; i++) {
+            bytes32 k = b[i];
+            assembly {
+                mstore(add(result, add(32, mul(32, i))), k)
+            }
+        }
+
+        return result;
     }
 }
