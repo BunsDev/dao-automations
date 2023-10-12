@@ -107,7 +107,7 @@ exports.handler = async function() {
     let qualifiedWallets = []
     let totalQualifiedUsers = 0
 
-    // seaches all activeUsers and returns if registeredEmail is a match.
+    // searches: activeUsers and returns if registeredEmail is a match.
     for (i=0; i < totalActiveUsers; i++) {
       // iterates: through each registeredEmail.
       let email = registeredEmails[i]
@@ -135,6 +135,7 @@ exports.handler = async function() {
     await postToSlack(post_qualifiedEmails);
     console.log('[.√.] posted qualifiedEmails to Slack')
 
+    // updates: post count for each qualified (if needed).
     for (i=0; i<totalQualifiedUsers; i++) {
       // gets: stored postCount for each qualifiedUser.
       let _postCount_contract = await Rewarder.getPostCount(qualifiedEmails[i], overrides) 
@@ -144,7 +145,7 @@ exports.handler = async function() {
       console.log(`postCount(contract) [${i}]: ${postCount_contract}`)
 
       let toAllocate = Number(postCount_api) - Number(postCount_contract)
-
+      
       if (toAllocate > 0) {
         // updates: postCount for each qualifiedUser.
         const updateCountTx = await Rewarder.setPostCount(qualifiedEmails[i], toAllocate, overrides)
@@ -172,7 +173,6 @@ exports.handler = async function() {
         const post_allocationConfirmation = `[.√.] transferred ${refillNeeded / 1e18} tokens to rewarder: ${explorer}/tx/${allocationTx.hash}`
         postToSlack(post_allocationConfirmation)
         console.log(post_allocationConfirmation)
-  
       }
     
     
