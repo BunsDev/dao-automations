@@ -24,7 +24,7 @@ node_modules
 
 # Miscellaneous
 /cache/
-/out/
+out
 yarn-error.log
-/broadcast/
-/bin/
+broadcast
+bin
