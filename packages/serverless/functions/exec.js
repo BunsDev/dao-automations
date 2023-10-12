@@ -135,24 +135,6 @@ exports.handler = async function() {
     await postToSlack(post_qualifiedEmails);
     console.log('[.√.] posted qualifiedEmails to Slack')
 
-    // approves: allocation to rewarder address.
-    const rewardBalance = await RewardToken.balanceOf(RewarderAddress, overrides)
-    const totalUnclaimed = await Rewarder.totalUnclaimed(overrides)
-    
-    // checks: if rewarder has enough funds to claim rewards.
-    const refillNeeded = Number(totalUnclaimed) <= Number(rewardBalance) ? 0 : Number(totalUnclaimed) - Number(rewardBalance)
-    console.log('refillNeeded: %s', (refillNeeded / 1e18).toString())
-    if (refillNeeded > 0) {
-      // sends: refill to rewarder address to ensure rewards are claimable.
-      const allocationTx = await RewardToken.transfer(RewarderAddress, (refillNeeded).toString(), overrides)
-      await allocationTx.wait()
-
-      const post_allocationConfirmation = `[.√.] transferred ${refillNeeded / 1e18} tokens to rewarder: ${explorer}/tx/${allocationTx.hash}`
-      postToSlack(post_allocationConfirmation)
-      console.log(post_allocationConfirmation)
-
-    }
-
     for (i=0; i<totalQualifiedUsers; i++) {
       // gets: stored postCount for each qualifiedUser.
       let _postCount_contract = await Rewarder.getPostCount(qualifiedEmails[i], overrides) 
@@ -174,6 +156,26 @@ exports.handler = async function() {
         console.log(post_updateConfirmation)
       }
     }
+
+      // checks: if rewarder has enough funds to claim rewards.
+      const rewardBalance = await RewardToken.balanceOf(RewarderAddress, overrides)
+      const totalUnclaimed = await Rewarder.totalUnclaimed(overrides)    
+      const refillNeeded = Number(totalUnclaimed) <= Number(rewardBalance) ? 0 : Number(totalUnclaimed) - Number(rewardBalance)
+      console.log('refillNeeded: %s', (refillNeeded / 1e18).toString())
+
+      // refills: if there is a need.
+      if (refillNeeded > 0) {
+        // sends: refill to rewarder address to ensure rewards are claimable.
+        const allocationTx = await RewardToken.transfer(RewarderAddress, (refillNeeded).toString(), overrides)
+        await allocationTx.wait()
+  
+        const post_allocationConfirmation = `[.√.] transferred ${refillNeeded / 1e18} tokens to rewarder: ${explorer}/tx/${allocationTx.hash}`
+        postToSlack(post_allocationConfirmation)
+        console.log(post_allocationConfirmation)
+  
+      }
+    
+    
   } catch (err) {
     const errorMessage = `:warning: transaction failed: ${err.message}`;
     console.error(errorMessage)
