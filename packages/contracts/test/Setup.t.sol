@@ -19,7 +19,8 @@ contract Setup is Test {
 
     // constants
     uint public immutable INITIAL_SUPPLY = 1_000_000;
-    string public EMAIL_ADDRESS_ONE = 'bunsthedev@gmail.com';
+    string public EMAIL_ADDRESS_ONE = 'first@gmail.com';
+    string public EMAIL_ADDRESS_TWO = 'second@gmail.com';
 
     // addresses
     address public TOKEN_ADDRESS;
