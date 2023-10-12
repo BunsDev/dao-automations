@@ -2,7 +2,7 @@
 pragma solidity >=0.6.0 <0.9.0;
 
 import "./Vm.sol";
-import "./test/test.sol";
+import "../../src/forge/helpers/test.sol";
 import "./console.sol";
 
 // Wrappers around Cheatcodes to avoid footguns

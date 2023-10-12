@@ -12,7 +12,7 @@ contract RewarderTest is Test, Setup {
     // test: register email
     function test_registerEmail() public {
         // imitates: user
-        vm.prank(USER_ADDRESS);
+        vm.startPrank(USER_ADDRESS);
 
         // registers: email
         RewarderContract.registerEmail(EMAIL_ADDRESS_ONE);
@@ -30,10 +30,12 @@ contract RewarderTest is Test, Setup {
 
     function test_verifyEmail() public {
         // imitates: owner
-        vm.prank(RewarderContract.owner());
+        vm.startPrank(RewarderContract.owner());
 
         // verifies: email
         RewarderContract.verifyEmail(EMAIL_ADDRESS_ONE);
+
+        vm.stopPrank();
 
         // checks: registered and verified.
         assertTrue(RewarderContract.registeredEmails(EMAIL_ADDRESS_ONE));
