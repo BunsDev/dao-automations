@@ -1,6 +1,6 @@
 const addresses = { 
-  Rewarder: "0xE5088680C65CeAF9aCB8A1f417bdC8EDF2a63BAe",
-  RewardToken: "0x0c7b964781a631bDa7a47559cf4ADEF1C6a19218",
+  Rewarder: "0x49F9B065267dDF6815F73bd1Ed597f34FFb9a929",
+  RewardToken: "0xeae3401374587be9A07FFB23EA3C2Bc5593B872A",
 };
 
 module.exports = addresses;
