@@ -181,31 +181,6 @@
         "type": "event"
     },
     {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "address",
-                "name": "user",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "email",
-                "type": "string"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "timeStamp",
-                "type": "uint256"
-            }
-        ],
-        "name": "Verified",
-        "type": "event"
-    },
-    {
         "inputs": [],
         "name": "RewardToken",
         "outputs": [
@@ -216,6 +191,13 @@
             }
         ],
         "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "allocateRewards",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -321,25 +303,6 @@
         "type": "function"
     },
     {
-        "inputs": [
-            {
-                "internalType": "string",
-                "name": "",
-                "type": "string"
-            }
-        ],
-        "name": "isVerified",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
         "inputs": [],
         "name": "owner",
         "outputs": [
@@ -368,25 +331,17 @@
     {
         "inputs": [
             {
-                "internalType": "string",
-                "name": "email",
-                "type": "string"
-            }
-        ],
-        "name": "register",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            },
             {
                 "internalType": "string",
                 "name": "email",
                 "type": "string"
             }
         ],
-        "name": "registerEmail",
+        "name": "registerUser",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -478,56 +433,6 @@
     {
         "inputs": [
             {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "name": "unverifiedEmails",
-        "outputs": [
-            {
-                "internalType": "string",
-                "name": "",
-                "type": "string"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "string",
-                "name": "email",
-                "type": "string"
-            },
-            {
-                "internalType": "address",
-                "name": "account",
-                "type": "address"
-            }
-        ],
-        "name": "updateEmail",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "updateUnverified",
-        "outputs": [
-            {
-                "internalType": "string[]",
-                "name": "_unverifiedEmails",
-                "type": "string[]"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
                 "internalType": "string",
                 "name": "",
                 "type": "string"
@@ -571,38 +476,6 @@
             }
         ],
         "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "name": "verifiedEmails",
-        "outputs": [
-            {
-                "internalType": "string",
-                "name": "",
-                "type": "string"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "string",
-                "name": "email",
-                "type": "string"
-            }
-        ],
-        "name": "verifyEmail",
-        "outputs": [],
-        "stateMutability": "nonpayable",
         "type": "function"
     }
 ]
